@@ -95,44 +95,6 @@ Developed and deployed at **Verticiti** and **Reallytics.ai** for enterprise cli
 | **Cloud** | AWS SageMaker, ECS/ECR, Docker |
 | **Monitoring** | Weights & Biases, TensorBoard |
 
-## Project Structure
-
-```
-llm-fine-tuning-lora/
-├── configs/
-│   ├── lora_config.yaml
-│   ├── qlora_config.yaml
-│   └── training_args.yaml
-├── data/
-│   ├── prepare_dataset.py
-│   ├── tokenize.py
-│   └── data_quality.py
-├── training/
-│   ├── train_lora.py
-│   ├── train_qlora.py
-│   ├── trainer_utils.py
-│   └── callbacks.py
-├── evaluation/
-│   ├── benchmark.py
-│   ├── perplexity.py
-│   └── domain_eval.py
-├── serving/
-│   ├── vllm_server.py
-│   ├── fastapi_app.py
-│   └── sagemaker_deploy.py
-├── infrastructure/
-│   ├── Dockerfile
-│   ├── Dockerfile.gpu
-│   └── docker-compose.yml
-├── notebooks/
-│   ├── 01_data_exploration.ipynb
-│   ├── 02_training_demo.ipynb
-│   └── 03_evaluation.ipynb
-├── tests/
-├── requirements.txt
-└── README.md
-```
-
 ## Results
 
 | Model | Method | Training Time | GPU Memory | Cost vs GPT-4 API |
@@ -142,23 +104,10 @@ llm-fine-tuning-lora/
 | Mistral 7B | LoRA | 3.5 hours | 14GB | -65% |
 | LLaMA-2 70B | QLoRA | 24 hours | 48GB | -40% |
 
-## Quick Start
+---
 
-```bash
-git clone https://github.com/rehan243/LLM-Fine-Tuning-LoRA.git
-cd LLM-Fine-Tuning-LoRA
+> **Source Code**: The production source code for this project is maintained in a private repository due to proprietary and client confidentiality requirements. This repository documents the architecture, design decisions, and technical approach. For code-level discussions or collaboration inquiries, feel free to reach out.
 
-pip install -r requirements.txt
-
-# Fine-tune with LoRA
-python training/train_lora.py --config configs/lora_config.yaml
-
-# Fine-tune with QLoRA (memory efficient)
-python training/train_qlora.py --config configs/qlora_config.yaml
-
-# Serve with VLLM
-python serving/vllm_server.py --model ./output/merged_model
-```
 
 ## Author
 
@@ -169,4 +118,3 @@ python serving/vllm_server.py --model ./output/merged_model
 - [Email](mailto:rehanmalil99@gmail.com)
 
 ---
-
