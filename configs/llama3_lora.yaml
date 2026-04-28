@@ -1,0 +1,22 @@
+# sane defaults — tune before you burn a week of A100s
+model_name: meta-llama/Meta-Llama-3-8B-Instruct
+lora_r: 16
+lora_alpha: 32
+lora_dropout: 0.05
+target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+lr: 2.0e-4
+epochs: 3
+batch_size: 4
+gradient_accumulation: 8
+max_seq_len: 4096
+warmup_ratio: 0.03
+output_dir: checkpoints/llama3_lora_run
+wandb_project: llm-lora-ft
+seed: 42
