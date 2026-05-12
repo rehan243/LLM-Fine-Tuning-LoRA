@@ -1,4 +1,4 @@
-"""Merge LoRA back into base weights, then export something inference servers can load."""
+"""merge lora back into base weights, then export something inference servers can load"""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class MergeError(RuntimeError):
-    """Raised when merge/export steps fail hard enough to cancel the release train."""
+    """raised when merge or export steps fail hard enough to cancel the release train"""
 
 
 def _assert_adapter_files(adapter_dir: Path) -> None:
@@ -25,7 +25,7 @@ def _assert_adapter_files(adapter_dir: Path) -> None:
         raise MergeError(f"adapter path is not a directory: {adapter_dir}")
     cfg = adapter_dir / "adapter_config.json"
     if not cfg.exists():
-        raise MergeError(f"missing {cfg.name} — are you sure this is a PEFT export?")
+        raise MergeError(f"missing {cfg.name} — are you sure this is a peft export?")
 
 
 def merge_and_export(
@@ -34,13 +34,14 @@ def merge_and_export(
     out_dir: str | Path,
     dtype: str = "bfloat16",
 ) -> Path:
-    """Library entrypoint so __init__ imports don't lie."""
+    """library entrypoint for merging and exporting models"""
     out = Path(out_dir)
     merge_lora_into_base(base_id, Path(adapter_dir), out, dtype=dtype)
     return out
 
 
 def merge_lora_into_base(base_id: str, adapter_dir: Path, out_dir: Path, dtype: str = "bfloat16") -> None:
+    """merge lora into base model and save the output"""
     _assert_adapter_files(adapter_dir)
     torch_dtype = torch.bfloat16 if dtype == "bfloat16" else torch.float16
     base = AutoModelForCausalLM.from_pretrained(base_id, torch_dtype=torch_dtype, device_map="auto", trust_remote_code=True)
@@ -50,11 +51,11 @@ def merge_lora_into_base(base_id: str, adapter_dir: Path, out_dir: Path, dtype: 
     merged.save_pretrained(out_dir, safe_serialization=True)
     tok = AutoTokenizer.from_pretrained(adapter_dir, trust_remote_code=True)
     tok.save_pretrained(out_dir)
-    logger.info("Merged model saved to %s", out_dir)
+    logger.info("merged model saved to %s", out_dir)
 
 
 def quantize_gguf(model_dir: Path, outfile: Path, method: str = "q4_k_m") -> None:
-    """Shell out to llama.cpp convert — if missing, we fail loud."""
+    """convert model to gguf format using llama.cpp tooling"""
     cmd = [
         "python",
         str(Path("third_party/llama.cpp/convert_hf_to_gguf.py")),
@@ -67,30 +68,31 @@ def quantize_gguf(model_dir: Path, outfile: Path, method: str = "q4_k_m") -> Non
     try:
         subprocess.run(cmd, check=True)
     except (FileNotFoundError, subprocess.CalledProcessError) as exc:
-        logger.error("GGUF conversion failed (%s). Install llama.cpp tooling or fix path.", exc)
+        logger.error("gguf conversion failed (%s). install llama.cpp tooling or fix path", exc)
         raise
 
 
 def quantize_awq_stub(model_dir: Path, outfile: Path) -> None:
-    """AWQ path is environment-specific; stub documents the hook."""
+    """stub for awq export, environment-specific"""
     logger.warning(
-        "AWQ export not run in this environment — use autoawq or your vendor script on %s -> %s",
+        "awq export not run in this environment — use autoawq or your vendor script on %s -> %s",
         model_dir,
         outfile,
     )
 
 
 def push_to_hub(local_dir: Path, repo_id: str, private: bool = True, token: Optional[str] = None) -> None:
+    """push the merged model to the huggingface hub"""
     if token:
         login(token=token)
     api = HfApi()
     api.create_repo(repo_id, private=private, exist_ok=True)
     api.upload_folder(folder_path=str(local_dir), repo_id=repo_id, repo_type="model")
-    logger.info("Pushed %s to %s", local_dir, repo_id)
+    logger.info("pushed %s to %s", local_dir, repo_id)
 
 
 def disk_usage_gb(path: Path) -> float:
-    """Rough size check before upload — Hub rejects comically huge folders sometimes."""
+    """check disk usage of a directory in gigabytes"""
     total = 0
     for f in path.rglob("*"):
         if f.is_file():
@@ -102,8 +104,9 @@ def disk_usage_gb(path: Path) -> float:
 
 
 def main(argv: Optional[list[str]] = None) -> int:
+    """main function to handle command line arguments and invoke merging"""
     logging.basicConfig(level=logging.INFO)
-    p = argparse.ArgumentParser(description="Merge LoRA and optionally quantize / push.")
+    p = argparse.ArgumentParser(description="merge lora and optionally quantize / push")
     p.add_argument("--base", required=True)
     p.add_argument("--adapter", type=Path, required=True)
     p.add_argument("--out", type=Path, required=True)
@@ -114,14 +117,19 @@ def main(argv: Optional[list[str]] = None) -> int:
     p.add_argument("--public", action="store_true")
     args = p.parse_args(argv)
 
-    merge_lora_into_base(args.base, args.adapter, args.out, dtype=args.dtype)
+    try:
+        merge_lora_into_base(args.base, args.adapter, args.out, dtype=args.dtype)
+    except MergeError as e:
+        logger.error("error during merge: %s", e)
+        return 1
+
     sz = disk_usage_gb(args.out)
     logger.info("merged checkpoint on disk ~%.2f GiB", sz)
     if args.gguf:
         try:
             quantize_gguf(args.out, args.gguf)
         except Exception:
-            logger.exception("GGUF step skipped/failed")
+            logger.exception("gguf step skipped/failed")
     if args.awq_out:
         quantize_awq_stub(args.out, args.awq_out)
     if args.push:
