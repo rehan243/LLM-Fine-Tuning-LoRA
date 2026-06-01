@@ -1,4 +1,4 @@
-"""LoRA trainer — the part that actually eats your GPU budget."""
+"""lora trainer — the part that actually eats your gpu budget"""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ class TrainState:
 
 
 class LoRATrainer:
-    """Fine-tune with LoRA. Assumes you already fought CUDA_VISIBLE_DEVICES."""
+    """fine-tune with lora. assumes you already fought cuda_visible_devices."""
 
     def __init__(
         self,
@@ -63,16 +63,21 @@ class LoRATrainer:
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True, trust_remote_code=True)
-        if self.tokenizer.pad_token is None:
-            self.tokenizer.pad_token = self.tokenizer.eos_token
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True, trust_remote_code=True)
+            if self.tokenizer.pad_token is None:
+                self.tokenizer.pad_token = self.tokenizer.eos_token
 
-        base = AutoModelForCausalLM.from_pretrained(
-            model_name,
-            torch_dtype=torch.bfloat16 if bf16 else torch.float32,
-            device_map=None,
-            trust_remote_code=True,
-        )
+            base = AutoModelForCausalLM.from_pretrained(
+                model_name,
+                torch_dtype=torch.bfloat16 if bf16 else torch.float32,
+                device_map=None,
+                trust_remote_code=True,
+            )
+        except Exception as exc:
+            logger.error("failed to load model or tokenizer (%s)", exc)
+            raise
+
         target_modules = target_modules or ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
         peft_cfg = LoraConfig(
             r=lora_r,
@@ -106,8 +111,8 @@ class LoRATrainer:
         self._rouge = None
         try:
             self._rouge = load_metric("rouge")
-        except Exception as exc:  # pragma: no cover - offline CI
-            logger.warning("ROUGE metric unavailable (%s); eval will skip it.", exc)
+        except Exception as exc:  # pragma: no cover - offline ci
+            logger.warning("rouge metric unavailable (%s); eval will skip it.", exc)
 
         if wandb_project and self.accelerator.is_main_process:
             wandb.init(project=wandb_project, name=wandb_run_name, config={"model": model_name, "lora_r": lora_r})
@@ -152,7 +157,7 @@ class LoRATrainer:
             labels = batch.get("labels")
             out = self.model(**batch)
             losses.append(out.loss.detach().float().item())
-            # ROUGE: two batches max — full decode pass is a trap for the impatient
+            # rouge: two batches max — full decode pass is a trap for the impatient
             if self._rouge is not None and labels is not None and rouge_batches < 2:
                 gen = self.accelerator.unwrap_model(self.model).generate(
                     input_ids=batch["input_ids"][:, :48],
@@ -180,9 +185,9 @@ class LoRATrainer:
         path = self.output_dir / f"adapter_step_{self.state.global_step}"
         self.accelerator.unwrap_model(self.model).save_pretrained(path)
         self.tokenizer.save_pretrained(path)
-        logger.info("Saved adapter to %s", path)
+        logger.info("saved adapter to %s", path)
 
 
 if __name__ == "__main__":  # pragma: no cover
     logging.basicConfig(level=logging.INFO)
-    print("Import DatasetBuilder and wire datasets before running.")
+    print("import datasetbuilder and wire datasets before running.")
