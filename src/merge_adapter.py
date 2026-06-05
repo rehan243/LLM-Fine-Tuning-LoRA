@@ -44,9 +44,14 @@ def merge_lora_into_base(base_id: str, adapter_dir: Path, out_dir: Path, dtype: 
     """merge lora into base model and save the output"""
     _assert_adapter_files(adapter_dir)
     torch_dtype = torch.bfloat16 if dtype == "bfloat16" else torch.float16
-    base = AutoModelForCausalLM.from_pretrained(base_id, torch_dtype=torch_dtype, device_map="auto", trust_remote_code=True)
-    model = PeftModel.from_pretrained(base, str(adapter_dir))
-    merged = model.merge_and_unload()
+    try:
+        base = AutoModelForCausalLM.from_pretrained(base_id, torch_dtype=torch_dtype, device_map="auto", trust_remote_code=True)
+        model = PeftModel.from_pretrained(base, str(adapter_dir))
+        merged = model.merge_and_unload()
+    except Exception as e:
+        logger.error("failed to load and merge models: %s", e)
+        raise MergeError("model loading or merging failed") from e
+
     out_dir.mkdir(parents=True, exist_ok=True)
     merged.save_pretrained(out_dir, safe_serialization=True)
     tok = AutoTokenizer.from_pretrained(adapter_dir, trust_remote_code=True)
@@ -86,8 +91,13 @@ def push_to_hub(local_dir: Path, repo_id: str, private: bool = True, token: Opti
     if token:
         login(token=token)
     api = HfApi()
-    api.create_repo(repo_id, private=private, exist_ok=True)
-    api.upload_folder(folder_path=str(local_dir), repo_id=repo_id, repo_type="model")
+    try:
+        api.create_repo(repo_id, private=private, exist_ok=True)
+        api.upload_folder(folder_path=str(local_dir), repo_id=repo_id, repo_type="model")
+    except Exception as e:
+        logger.error("failed to push to hub: %s", e)
+        raise
+
     logger.info("pushed %s to %s", local_dir, repo_id)
 
 
