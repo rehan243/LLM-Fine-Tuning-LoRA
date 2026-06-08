@@ -1,26 +1,26 @@
 import pytest
-from training_utils import calculate_loss, normalize_data
+from training_utils import prepare_data, calculate_accuracy
 
-# test for loss calculation function
-def test_calculate_loss():
-    # check loss for a simple case
-    predictions = [0.2, 0.5, 0.7]
-    targets = [0, 1, 1]
-    expected_loss = (0.5 * (0.2 - 0)**2) + (0.5 * (0.5 - 1)**2) + (0.5 * (0.7 - 1)**2)
-    
-    # assert the calculated loss is close to expected
-    assert abs(calculate_loss(predictions, targets) - expected_loss) < 1e-5
+def test_prepare_data():
+    # test with mock input
+    raw_data = ["text 1", "text 2", "text 3"]
+    expected_output = ["text 1", "text 2", "text 3"]  # assuming no changes
+    processed_data = prepare_data(raw_data)
+    assert processed_data == expected_output
 
-# test for data normalization
-def test_normalize_data():
-    data = [1, 2, 3, 4, 5]
-    expected_normalized = [0, 0.25, 0.5, 0.75, 1]
-    
-    # assert normalized data is as expected
-    normalized_data = normalize_data(data)
-    assert len(normalized_data) == len(expected_normalized)
-    
-    for norm, exp in zip(normalized_data, expected_normalized):
-        assert abs(norm - exp) < 1e-5
+def test_calculate_accuracy():
+    # test with sample predictions and labels
+    predictions = [1, 0, 1, 1]
+    labels = [1, 0, 0, 1]
+    expected_accuracy = 0.5  # 2 correct out of 4
+    accuracy = calculate_accuracy(predictions, labels)
+    assert accuracy == expected_accuracy
+
+def test_prepare_data_empty():
+    # test with empty data
+    raw_data = []
+    expected_output = []
+    processed_data = prepare_data(raw_data)
+    assert processed_data == expected_output
 
 # TODO: add more tests for edge cases and different inputs
