@@ -1,26 +1,28 @@
 import pytest
-from training_utils import prepare_data, calculate_accuracy
+from training_utils import calculate_learning_rate, adjust_weights
 
-def test_prepare_data():
-    # test with mock input
-    raw_data = ["text 1", "text 2", "text 3"]
-    expected_output = ["text 1", "text 2", "text 3"]  # assuming no changes
-    processed_data = prepare_data(raw_data)
-    assert processed_data == expected_output
+def test_calculate_learning_rate():
+    # testing learning rate calculation
+    base_lr = 0.01
+    epoch = 5
+    expected_lr = base_lr * (0.95 ** epoch)  # assuming a simple decay
+    assert calculate_learning_rate(base_lr, epoch) == expected_lr
 
-def test_calculate_accuracy():
-    # test with sample predictions and labels
-    predictions = [1, 0, 1, 1]
-    labels = [1, 0, 0, 1]
-    expected_accuracy = 0.5  # 2 correct out of 4
-    accuracy = calculate_accuracy(predictions, labels)
-    assert accuracy == expected_accuracy
+def test_adjust_weights():
+    # testing weight adjustment
+    weights = [0.2, 0.5, 0.3]
+    gradient = [0.1, 0.2, 0.1]
+    learning_rate = 0.01
+    expected_weights = [w - learning_rate * g for w, g in zip(weights, gradient)]
+    
+    adjusted_weights = adjust_weights(weights, gradient, learning_rate)
+    assert adjusted_weights == expected_weights
 
-def test_prepare_data_empty():
-    # test with empty data
-    raw_data = []
-    expected_output = []
-    processed_data = prepare_data(raw_data)
-    assert processed_data == expected_output
+def test_adjust_weights_no_change():
+    # test when gradient is zero
+    weights = [0.2, 0.5, 0.3]
+    gradient = [0.0, 0.0, 0.0]
+    learning_rate = 0.01
+    assert adjust_weights(weights, gradient, learning_rate) == weights
 
-# TODO: add more tests for edge cases and different inputs
+# TODO: add more tests for edge cases and different scenarios
