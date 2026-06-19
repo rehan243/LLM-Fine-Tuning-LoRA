@@ -1,37 +1,33 @@
-import yaml
+import json
 import os
-from typing import Any, Optional
+from typing import Any, Dict
 
 class ConfigLoader:
-    def __init__(self, config_path: str) -> None:
+    def __init__(self, config_path: str):
         self.config_path = config_path
-        self.config = self.load_config()
+        self.config: Dict[str, Any] = {}
 
-    def load_config(self) -> dict[str, Any]:
-        # check if the config file exists
-        if not os.path.isfile(self.config_path):
-            raise FileNotFoundError(f"config file not found: {self.config_path}")
+    def load(self) -> Dict[str, Any]:
+        if not os.path.exists(self.config_path):
+            raise FileNotFoundError(f"Config file not found at {self.config_path}")
         
-        try:
-            with open(self.config_path, 'r') as file:
-                # try loading the yaml config
-                config = yaml.safe_load(file)
-        except yaml.YAMLError as e:
-            raise ValueError(f"error parsing yaml file: {self.config_path}") from e
-        except Exception as e:
-            raise RuntimeError(f"unexpected error while loading config: {self.config_path}") from e
+        with open(self.config_path, 'r') as f:
+            self.config = json.load(f)
         
-        return config
+        return self.config
 
-    def get(self, key: str, default: Optional[Any] = None) -> Optional[Any]:
-        # get a value from the config, returning default if not found
+    def get(self, key: str, default: Any = None) -> Any:
         return self.config.get(key, default)
 
-    def __repr__(self) -> str:
-        return f"<ConfigLoader config_path={self.config_path}>"
+    def set(self, key: str, value: Any) -> None:
+        self.config[key] = value
 
-# example usage
-if __name__ == "__main__":
-    # TODO: replace with actual config file path
-    config_loader = ConfigLoader('path/to/config.yaml')
-    print(config_loader.get('some_key', 'default_value'))
+    def save(self) -> None:
+        with open(self.config_path, 'w') as f:
+            json.dump(self.config, f, indent=4)
+
+# usage example:
+# if __name__ == "__main__":
+#     config_loader = ConfigLoader('path/to/config.json')
+#     config = config_loader.load()
+#     print(config)
