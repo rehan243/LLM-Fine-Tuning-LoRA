@@ -1,56 +1,48 @@
 #!/bin/bash
 
-# run this script to check code style and run tests
+# this script is for development tools like linting and testing
 
-set -e  # exit on error
-
-# define a function for linting
-lint() {
-    echo "linting the code..."
-    flake8 src/  # check for style issues
-    echo "linting completed"
+# check if a command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
 }
 
-# define a function for running tests
-test() {
-    echo "running tests..."
-    pytest tests/  # run the test suite
-    echo "all tests passed"
+# install dependencies if not already installed
+install_dependencies() {
+    echo "installing dependencies..."
+    pip install -r requirements.txt
 }
 
-# check for docker
-docker_check() {
-    if ! command -v docker &> /dev/null; then
-        echo "docker not found, please install it"
-        exit 1
+# run linting with flake8
+run_lint() {
+    echo "running linting..."
+    if command_exists flake8; then
+        flake8 src/
+    else
+        echo "flake8 not found, installing..."
+        pip install flake8
+        flake8 src/
     fi
 }
 
-# define a function for building and running the docker container
-docker_run() {
-    echo "building docker image..."
-    docker build -t lora-finetuning .  # build the docker image
-    echo "running docker container..."
-    docker run --rm lora-finetuning  # run the container
+# run tests with pytest
+run_tests() {
+    echo "running tests..."
+    if command_exists pytest; then
+        pytest tests/
+    else
+        echo "pytest not found, installing..."
+        pip install pytest
+        pytest tests/
+    fi
 }
 
-# main script logic
-case "$1" in
-    lint)
-        lint
-        ;;
-    test)
-        test
-        ;;
-    docker)
-        docker_check
-        docker_run
-        ;;
-    *)
-        echo "usage: $0 {lint|test|docker}"
-        exit 1
-        ;;
-esac
+# main function to call when script is executed
+main() {
+    install_dependencies
+    run_lint
+    run_tests
+}
 
-# TODO: add more commands as needed
-echo "done"
+# call the main function
+main
