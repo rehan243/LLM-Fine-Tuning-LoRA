@@ -1,17 +1,27 @@
--- this view aggregates fraud detection metrics by month
-create or replace view monthly_fraud_analysis as
-select
-    date_trunc('month', transaction_date) as month,
-    count(case when is_fraudulent then 1 end) as total_frauds,
-    sum(case when is_fraudulent then transaction_amount else 0 end) as total_fraud_amount,
-    count(*) as total_transactions,
-    sum(transaction_amount) as total_transaction_value
-from
-    transactions
-group by
-    month
-order by
-    month desc;
+-- this sql view will help analyze potential fraudulent transactions
+-- it checks for patterns in transaction amounts and frequencies
 
--- this will help in tracking trends over time
--- TODO: consider adding filters for specific transaction types or customer segments
+create or replace view fraud_analysis as
+select 
+    user_id,
+    count(*) as transaction_count,
+    sum(amount) as total_spent,
+    avg(amount) as average_transaction,
+    max(amount) as max_transaction,
+    min(amount) as min_transaction,
+    case 
+        when count(*) > 10 and avg(amount > 500) then 'high risk'
+        when sum(amount) > 10000 then 'medium risk'
+        else 'low risk'
+    end as risk_level
+from 
+    transactions
+where 
+    transaction_date >= current_date - interval '30 days'
+group by 
+    user_id
+having 
+    count(*) >= 5
+order by 
+    risk_level desc, transaction_count desc
+-- TODO: maybe add more filters based on location or time of day
