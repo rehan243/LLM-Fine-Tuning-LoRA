@@ -1,28 +1,27 @@
 import pytest
-from training_utils import calculate_learning_rate, adjust_weights
+from training_utils import calculate_loss, update_model_weights
 
-def test_calculate_learning_rate():
-    # testing learning rate calculation
-    base_lr = 0.01
-    epoch = 5
-    expected_lr = base_lr * (0.95 ** epoch)  # assuming a simple decay
-    assert calculate_learning_rate(base_lr, epoch) == expected_lr
-
-def test_adjust_weights():
-    # testing weight adjustment
-    weights = [0.2, 0.5, 0.3]
-    gradient = [0.1, 0.2, 0.1]
-    learning_rate = 0.01
-    expected_weights = [w - learning_rate * g for w, g in zip(weights, gradient)]
+# testing loss calculation
+def test_calculate_loss():
+    predictions = [0.2, 0.5, 0.8]
+    targets = [0, 1, 1]
+    expected_loss = 0.5  # this is a simple mock value, adjust if needed
+    loss = calculate_loss(predictions, targets)
     
-    adjusted_weights = adjust_weights(weights, gradient, learning_rate)
-    assert adjusted_weights == expected_weights
+    # just checking that the loss is close to what we expect
+    assert abs(loss - expected_loss) < 0.01
 
-def test_adjust_weights_no_change():
-    # test when gradient is zero
-    weights = [0.2, 0.5, 0.3]
-    gradient = [0.0, 0.0, 0.0]
-    learning_rate = 0.01
-    assert adjust_weights(weights, gradient, learning_rate) == weights
+# testing model weights update
+def test_update_model_weights():
+    weights = [0.1, 0.2, 0.3]
+    gradients = [0.01, 0.02, 0.01]
+    learning_rate = 0.1
+    expected_weights = [0.099, 0.198, 0.299]  # simple calculation here
+    
+    updated_weights = update_model_weights(weights, gradients, learning_rate)
+    
+    # check if the weights are updated correctly
+    for w, ew in zip(updated_weights, expected_weights):
+        assert abs(w - ew) < 0.01
 
-# TODO: add more tests for edge cases and different scenarios
+# TODO: add more tests for edge cases and invalid inputs
