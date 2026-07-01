@@ -53,10 +53,14 @@ def merge_lora_into_base(base_id: str, adapter_dir: Path, out_dir: Path, dtype: 
         raise MergeError("model loading or merging failed") from e
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    merged.save_pretrained(out_dir, safe_serialization=True)
-    tok = AutoTokenizer.from_pretrained(adapter_dir, trust_remote_code=True)
-    tok.save_pretrained(out_dir)
-    logger.info("merged model saved to %s", out_dir)
+    try:
+        merged.save_pretrained(out_dir, safe_serialization=True)
+        tok = AutoTokenizer.from_pretrained(adapter_dir, trust_remote_code=True)
+        tok.save_pretrained(out_dir)
+        logger.info("merged model saved to %s", out_dir)
+    except Exception as e:
+        logger.error("failed to save model or tokenizer: %s", e)
+        raise
 
 
 def quantize_gguf(model_dir: Path, outfile: Path, method: str = "q4_k_m") -> None:
