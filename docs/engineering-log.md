@@ -16,3 +16,7 @@ Fine-tuning with LoRA can significantly reduce the number of trainable parameter
 ### 2026-07-09
 
 During QLoRA fine-tuning, I noticed that using smaller rank values (e.g., 4 or 8) significantly reduces VRAM usage but can lead to unstable training if the learning rate isn't adjusted downward accordingly. It's crucial to tune the optimizer parameters carefully because too high a learning rate with low-rank adapters tends to cause divergence.
+
+### 2026-07-10
+
+Noticed that when stacking multiple LoRA adapters, GPU memory consumption grows almost linearly with the number of adapters active, which limits practical composition beyond 3-4 adapters without offloading. Also, QLoRA's quantization reduces VRAM use during fine-tuning effectively but can introduce subtle accuracy drops unless the base model is carefully selected for compatibility.
