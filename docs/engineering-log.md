@@ -20,3 +20,11 @@ During QLoRA fine-tuning, I noticed that using smaller rank values (e.g., 4 or 8
 ### 2026-07-10
 
 Noticed that when stacking multiple LoRA adapters, GPU memory consumption grows almost linearly with the number of adapters active, which limits practical composition beyond 3-4 adapters without offloading. Also, QLoRA's quantization reduces VRAM use during fine-tuning effectively but can introduce subtle accuracy drops unless the base model is carefully selected for compatibility.
+
+### 2026-07-12
+
+**LoRA/QLoRA Fine-Tuning and Adapter Management**
+
+- Experimented with LoRA/QLoRA for fine-tuning a large language model. Found that LoRA adapters were more efficient in terms of memory usage, reducing the model size from 175GB to 100GB.
+- However, QLoRA adapters required more computational resources due to their larger memory footprint, taking approximately 20% longer to train compared to LoRA adapters.
+- Learned that while LoRA adapters offer significant memory savings, they might not always be the best choice if computational resources are limited.
