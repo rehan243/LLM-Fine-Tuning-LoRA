@@ -1,42 +1,38 @@
 #!/bin/bash
 
-# this script sets up the development environment for the project
+# this script sets up the development environment
+# it runs linting and tests
 
-# check if python is installed
-if ! command -v python3 &> /dev/null
-then
-    echo "python3 is not installed. please install it first."
-    exit 1
+set -e  # exit on error
+
+# define variables
+LINTER="flake8"
+TEST_CMD="pytest"
+DOCKER_IMAGE="my_image:latest"
+
+# check for required tools
+if ! command -v $LINTER &> /dev/null; then
+    echo "$LINTER could not be found, installing..."
+    pip install flake8
 fi
 
-# create a virtual environment
-echo "creating a virtual environment..."
-python3 -m venv venv
+if ! command -v $TEST_CMD &> /dev/null; then
+    echo "$TEST_CMD could not be found, installing..."
+    pip install pytest
+fi
 
-# activate the virtual environment
-echo "activating the virtual environment..."
-source venv/bin/activate
-
-# install required packages
-echo "installing required packages..."
-pip install -r requirements.txt
-
-# run linting
-echo "running linting with flake8..."
-flake8 src/
+# lint the code
+echo "running linter..."
+$LINTER src/ scripts/ tests/
 
 # run tests
-echo "running tests with pytest..."
-pytest tests/
+echo "running tests..."
+$TEST_CMD
 
-# docker option
-read -p "do you want to build the docker image? (y/n) " answer
-if [[ $answer == "y" ]]; then
+# build docker image (optional)
+if [[ "$1" == "docker" ]]; then
     echo "building docker image..."
-    docker build -t lora-finetuning .
-    echo "docker image built successfully"
+    docker build -t $DOCKER_IMAGE .
 fi
 
-echo "development setup complete. enjoy coding!" 
-
-# TODO: add more options like cleaning up the environment or updating packages.
+echo "dev setup complete"  # all done!
