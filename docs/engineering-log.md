@@ -28,3 +28,7 @@ Noticed that when stacking multiple LoRA adapters, GPU memory consumption grows 
 - Experimented with LoRA/QLoRA for fine-tuning a large language model. Found that LoRA adapters were more efficient in terms of memory usage, reducing the model size from 175GB to 100GB.
 - However, QLoRA adapters required more computational resources due to their larger memory footprint, taking approximately 20% longer to train compared to LoRA adapters.
 - Learned that while LoRA adapters offer significant memory savings, they might not always be the best choice if computational resources are limited.
+
+### 2026-07-23
+
+Reviewed LoRA/QLoRA fine-tuning and adapter management today. Reinforced that measuring the change end-to-end beats reasoning about it in isolation — the numbers rarely match the intuition.
