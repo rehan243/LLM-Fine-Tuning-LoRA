@@ -1,27 +1,24 @@
 import pytest
-from training_utils import calculate_loss, update_model_weights
+from src.training_utils import calculate_loss, update_weights
 
-# testing loss calculation
 def test_calculate_loss():
-    predictions = [0.2, 0.5, 0.8]
-    targets = [0, 1, 1]
-    expected_loss = 0.5  # this is a simple mock value, adjust if needed
-    loss = calculate_loss(predictions, targets)
+    # testing with some dummy values
+    predictions = [0.5, 0.7, 0.2]
+    targets = [0, 1, 0]
     
-    # just checking that the loss is close to what we expect
-    assert abs(loss - expected_loss) < 0.01
+    loss = calculate_loss(predictions, targets)
+    expected_loss = 0.5 # replace with actual expected value
+    assert abs(loss - expected_loss) < 0.01, f"expected loss: {expected_loss}, got: {loss}"
 
-# testing model weights update
-def test_update_model_weights():
+def test_update_weights():
+    # testing weight update
     weights = [0.1, 0.2, 0.3]
     gradients = [0.01, 0.02, 0.01]
     learning_rate = 0.1
-    expected_weights = [0.099, 0.198, 0.299]  # simple calculation here
     
-    updated_weights = update_model_weights(weights, gradients, learning_rate)
-    
-    # check if the weights are updated correctly
+    updated_weights = update_weights(weights, gradients, learning_rate)
+    expected_weights = [0.099, 0.198, 0.299] # replace with actual expected values
     for w, ew in zip(updated_weights, expected_weights):
-        assert abs(w - ew) < 0.01
+        assert abs(w - ew) < 0.001, f"expected weight: {ew}, got: {w}"
 
-# TODO: add more tests for edge cases and invalid inputs
+# TODO: add more tests for edge cases and other functions in training_utils
