@@ -52,3 +52,7 @@ Reviewed LoRA/QLoRA fine-tuning and adapter management today. Reinforced that me
 ### 2026-08-30
 
 Reviewed LoRA/QLoRA fine-tuning and adapter management today. Reinforced that measuring the change end-to-end beats reasoning about it in isolation — the numbers rarely match the intuition.
+
+### 2026-09-02
+
+Reviewed LoRA/QLoRA fine-tuning and adapter management today. Reinforced that measuring the change end-to-end beats reasoning about it in isolation — the numbers rarely match the intuition.
